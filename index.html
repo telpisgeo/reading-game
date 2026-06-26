@@ -119,7 +119,7 @@ body {
 </style>
 </head>
 <body>
-<div class="version-tag">v6</div>
+<div class="version-tag">v7</div>
 <div class="game">
   <div class="game-wrap" id="gameWrap">
     <div class="progress-row" id="progressRow"></div>
@@ -155,11 +155,10 @@ body {
     <div class="debug" id="debug"></div>
   </div>
   <div class="finish" id="finishScreen">
-    <div style="font-size:72px">🏆</div>
     <div style="font-size:30px;font-weight:700;color:#2D2D2D">Молодець!</div>
     <div style="font-size:17px;color:#888">Ти прочитала всі слова</div>
     <div style="font-size:44px;font-weight:700;color:#F5A623" id="finalScore"></div>
-    <button class="restart-btn" onclick="restartGame()">Ще раз! 🔄</button>
+    <button class="restart-btn" onclick="restartGame()">Ще раз</button>
   </div>
 </div>
 <div class="result-overlay" id="resultOverlay">
@@ -171,18 +170,39 @@ body {
   </div>
 </div>
 <script>
-const WORDS = [
-  {word:'мама',    syllables:'ма · ма',        hint:'👩 Читай вголос!'},
-  {word:'тато',    syllables:'та · то',        hint:'👨 Читай вголос!'},
-  {word:'кіт',     syllables:'кіт',            hint:'🐱 Читай вголос!'},
-  {word:'дім',     syllables:'дім',            hint:'🏠 Читай вголос!'},
-  {word:'сонце',   syllables:'сон · це',       hint:'☀️ Читай вголос!'},
-  {word:'книга',   syllables:'кни · га',       hint:'📚 Читай вголос!'},
-  {word:'вода',    syllables:'во · да',        hint:'💧 Читай вголос!'},
-  {word:'зірка',   syllables:'зір · ка',       hint:'⭐ Читай вголос!'},
-  {word:'яблуко',  syllables:'яб · лу · ко',  hint:'🍎 Читай вголос!'},
-  {word:'метелик', syllables:'ме · те · лик',  hint:'🦋 Читай вголос!'},
+const ALL_WORDS = [
+  {word:'суверенітет',     syllables:'су · ве · ре · ні · тет'},
+  {word:'відповідальність',syllables:'від · по · ві · даль · ність'},
+  {word:'конституція',     syllables:'кон · сти · ту · ці · я'},
+  {word:'справедливість',  syllables:'спра · вед · ли · вість'},
+  {word:'громадянство',    syllables:'гро · ма · дян · ство'},
+  {word:'незалежність',    syllables:'не · за · леж · ність'},
+  {word:'парламентаризм',  syllables:'пар · ла · мен · та · ризм'},
+  {word:'демократія',      syllables:'де · мо · кра · ті · я'},
+  {word:'індивідуальність',syllables:'ін · ди · ві · ду · аль · ність'},
+  {word:'взаємодопомога',  syllables:'вза · є · мо · до · по · мо · га'},
+  {word:'підприємництво',  syllables:'під · при · єм · ниц · тво'},
+  {word:'самовдосконалення',syllables:'са · мо · вдос · ко · на · лен · ня'},
+  {word:'усвідомлення',    syllables:'ус · ві · дом · лен · ня'},
+  {word:'переконання',     syllables:'пе · ре · ко · нан · ня'},
+  {word:'спостережливість',syllables:'спос · те · реж · ли · вість'},
+  {word:'взаємозалежність',syllables:'вза · є · мо · за · леж · ність'},
+  {word:'цілеспрямованість',syllables:'ці · ле · спря · мо · ва · ність'},
+  {word:'самостійність',   syllables:'са · мос · тій · ність'},
+  {word:'відчуженість',    syllables:'від · чу · же · ність'},
+  {word:'пристосованість', syllables:'прис · то · со · ва · ність'},
 ];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+let WORDS = shuffle(ALL_WORDS).slice(0, 10);
 
 let current=0, score=0, recognition=null, isRecording=false;
 let audioCtx=null, analyser=null, micStream=null, volTimer=null;
@@ -331,7 +351,7 @@ function showWord(){
   document.getElementById('syllables').textContent=w.syllables;
   document.getElementById('wordDisplay').textContent=w.word;
   document.getElementById('wordDisplay').className='word';
-  document.getElementById('hint').textContent=w.hint;
+  document.getElementById('hint').textContent='Натисни мікрофон і прочитай слово вголос';
   document.getElementById('thinking').textContent='';
   document.getElementById('micBtn').className='mic-btn';
   document.getElementById('micLabel').textContent='натисни і говори';
@@ -458,7 +478,7 @@ function showResult(success,heard){
   if(success){
     score++;
     overlay.className='result-overlay success-bg show';
-    document.getElementById('resultEmoji').textContent=['🎉','⭐','🌟','🏆','👏','🥳'][Math.floor(Math.random()*6)];
+    document.getElementById('resultEmoji').textContent='';
     document.getElementById('resultText').textContent=['Супер!','Чудово!','Молодець!','Відмінно!','Браво!'][Math.floor(Math.random()*5)];
     document.getElementById('resultHeard').textContent='';
     document.getElementById('wordDisplay').className='word success';
@@ -467,7 +487,7 @@ function showResult(success,heard){
   }else{
     playFail();
     overlay.className='result-overlay fail-bg show';
-    document.getElementById('resultEmoji').textContent=['💪','😊','🙌','🤗'][Math.floor(Math.random()*4)];
+    document.getElementById('resultEmoji').textContent='';
     document.getElementById('resultText').textContent=['Майже! Ще спробуй!','Не здавайся!','Ти зможеш!'][Math.floor(Math.random()*3)];
     document.getElementById('resultHeard').textContent=heard?'Я почув: "'+heard+'"':'';
     document.getElementById('wordDisplay').className='word fail';
@@ -502,6 +522,7 @@ function spawnConfetti(){
 
 function restartGame(){
   current=0; score=0;
+  WORDS = shuffle(ALL_WORDS).slice(0, 10);
   document.getElementById('gameWrap').className='game-wrap';
   document.getElementById('finishScreen').className='finish';
   showWord();
