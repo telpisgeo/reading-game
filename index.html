@@ -119,7 +119,7 @@ body {
 </style>
 </head>
 <body>
-<div class="version-tag">v7</div>
+<div class="version-tag">v8</div>
 <div class="game">
   <div class="game-wrap" id="gameWrap">
     <div class="progress-row" id="progressRow"></div>
@@ -171,26 +171,31 @@ body {
 </div>
 <script>
 const ALL_WORDS = [
-  {word:'суверенітет',     syllables:'су · ве · ре · ні · тет'},
-  {word:'відповідальність',syllables:'від · по · ві · даль · ність'},
-  {word:'конституція',     syllables:'кон · сти · ту · ці · я'},
-  {word:'справедливість',  syllables:'спра · вед · ли · вість'},
-  {word:'громадянство',    syllables:'гро · ма · дян · ство'},
-  {word:'незалежність',    syllables:'не · за · леж · ність'},
-  {word:'парламентаризм',  syllables:'пар · ла · мен · та · ризм'},
-  {word:'демократія',      syllables:'де · мо · кра · ті · я'},
-  {word:'індивідуальність',syllables:'ін · ди · ві · ду · аль · ність'},
-  {word:'взаємодопомога',  syllables:'вза · є · мо · до · по · мо · га'},
-  {word:'підприємництво',  syllables:'під · при · єм · ниц · тво'},
-  {word:'самовдосконалення',syllables:'са · мо · вдос · ко · на · лен · ня'},
-  {word:'усвідомлення',    syllables:'ус · ві · дом · лен · ня'},
-  {word:'переконання',     syllables:'пе · ре · ко · нан · ня'},
-  {word:'спостережливість',syllables:'спос · те · реж · ли · вість'},
-  {word:'взаємозалежність',syllables:'вза · є · мо · за · леж · ність'},
-  {word:'цілеспрямованість',syllables:'ці · ле · спря · мо · ва · ність'},
-  {word:'самостійність',   syllables:'са · мос · тій · ність'},
-  {word:'відчуженість',    syllables:'від · чу · же · ність'},
-  {word:'пристосованість', syllables:'прис · то · со · ва · ність'},
+  {word:'пори року',        syllables:'по · ри  ро · ку'},
+  {word:'спостереження',    syllables:'спос · те · ре · жен · ня'},
+  {word:'природа',          syllables:'при · ро · да'},
+  {word:'рослини',          syllables:'рос · ли · ни'},
+  {word:'тварини',          syllables:'тва · ри · ни'},
+  {word:'людина',           syllables:'лю · ди · на'},
+  {word:'суспільство',      syllables:'сус · піль · ство'},
+  {word:'довкілля',         syllables:'дов · кіл · ля'},
+  {word:'Україна',          syllables:'У · кра · ї · на'},
+  {word:'громадянин',       syllables:'гро · ма · дя · нин'},
+  {word:'держава',          syllables:'дер · жа · ва'},
+  {word:'рівновага',        syllables:'рів · но · ва · га'},
+  {word:'харчування',       syllables:'хар · чу · ван · ня'},
+  {word:'здоровʼя',         syllables:'здо · ров · я'},
+  {word:'безпека',          syllables:'без · пе · ка'},
+  {word:'відповідальність', syllables:'від · по · ві · даль · ність'},
+  {word:'навколишнє',       syllables:'нав · ко · лиш · нє'},
+  {word:'охорона',          syllables:'о · хо · ро · на'},
+  {word:'дослідження',      syllables:'дос · лід · жен · ня'},
+  {word:'середовище',       syllables:'се · ре · до · ви · ще'},
+  {word:'речовини',         syllables:'ре · чо · ви · ни'},
+  {word:'властивості',      syllables:'влас · ти · вос · ті'},
+  {word:'перетворення',     syllables:'пе · рет · во · рен · ня'},
+  {word:'спадщина',         syllables:'спад · щи · на'},
+  {word:'традиції',         syllables:'тра · ди · ці · ї'},
 ];
 
 function shuffle(arr){
@@ -404,7 +409,7 @@ function startRecording(){
   document.getElementById('micBtn').className='mic-btn recording';
   document.getElementById('micLabel').textContent='зупинити →';
   document.getElementById('wordDisplay').className='word listening';
-  document.getElementById('hint').textContent='🔴 Читай зараз!';
+  document.getElementById('hint').textContent='Читай зараз!';
   document.getElementById('thinking').textContent='';
   setMicStatus('active', 'слухаю…');
   startVolBars();
