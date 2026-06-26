@@ -29,7 +29,7 @@ body {
 }
 .card-top { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg,#FF6B35,#F5A623); }
 .syllables { font-size: 13px; color: #B0A090; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 10px; min-height: 20px; }
-.word { font-size: 64px; font-weight: 700; color: #2D2D2D; line-height: 1; margin-bottom: 14px; transition: color 0.3s; }
+.word { font-size: 64px; font-weight: 700; color: #2D2D2D; line-height: 1.1; margin-bottom: 14px; transition: color 0.3s; word-break: break-word; }
 .word.listening { color: #FF6B35; }
 .word.success { color: #4CAF50; }
 .word.fail { color: #FF8A65; }
@@ -119,7 +119,7 @@ body {
 </style>
 </head>
 <body>
-<div class="version-tag">v8</div>
+<div class="version-tag">v9</div>
 <div class="game">
   <div class="game-wrap" id="gameWrap">
     <div class="progress-row" id="progressRow"></div>
@@ -354,8 +354,11 @@ function buildProgress(){
 function showWord(){
   const w=WORDS[current];
   document.getElementById('syllables').textContent=w.syllables;
-  document.getElementById('wordDisplay').textContent=w.word;
-  document.getElementById('wordDisplay').className='word';
+  const wd = document.getElementById('wordDisplay');
+  wd.textContent = w.word;
+  wd.className = 'word';
+  const len = w.word.replace(/\s/g,'').length;
+  wd.style.fontSize = len <= 6 ? '64px' : len <= 9 ? '48px' : len <= 12 ? '38px' : '30px';
   document.getElementById('hint').textContent='Натисни мікрофон і прочитай слово вголос';
   document.getElementById('thinking').textContent='';
   document.getElementById('micBtn').className='mic-btn';
