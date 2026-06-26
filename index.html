@@ -119,7 +119,7 @@ body {
 </style>
 </head>
 <body>
-<div class="version-tag">v5</div>
+<div class="version-tag">v6</div>
 <div class="game">
   <div class="game-wrap" id="gameWrap">
     <div class="progress-row" id="progressRow"></div>
@@ -187,6 +187,69 @@ const WORDS = [
 let current=0, score=0, recognition=null, isRecording=false;
 let audioCtx=null, analyser=null, micStream=null, volTimer=null;
 let micReady = false;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playSuccess(){
+  try {
+    const ctx = getAudioCtx();
+    // cheerful ascending arpeggio: C5 E5 G5 C6
+    [[523,0],[659,0.12],[784,0.24],[1047,0.38]].forEach(([freq, when]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + when;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.35, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      osc.start(t); osc.stop(t + 0.35);
+    });
+  } catch(e){}
+}
+
+function playFail(){
+  try {
+    const ctx = getAudioCtx();
+    // gentle descending two-tone
+    [[330,0],[262,0.18]].forEach(([freq, when]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + when;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.38);
+    });
+  } catch(e){}
+}
+
+function playFinish(){
+  try {
+    const ctx = getAudioCtx();
+    // victory fanfare: C5 E5 G5 pause C6 (longer)
+    [[523,0],[659,0.15],[784,0.3],[1047,0.52]].forEach(([freq, when], i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = i===3 ? 'sine' : 'triangle';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + when;
+      const dur = i===3 ? 0.7 : 0.22;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.4, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.start(t); osc.stop(t + dur + 0.05);
+    });
+  } catch(e){}
+}
 
 function dbg(msg){ document.getElementById('debug').textContent = msg; }
 
@@ -399,8 +462,10 @@ function showResult(success,heard){
     document.getElementById('resultText').textContent=['Супер!','Чудово!','Молодець!','Відмінно!','Браво!'][Math.floor(Math.random()*5)];
     document.getElementById('resultHeard').textContent='';
     document.getElementById('wordDisplay').className='word success';
+    playSuccess();
     spawnConfetti();
   }else{
+    playFail();
     overlay.className='result-overlay fail-bg show';
     document.getElementById('resultEmoji').textContent=['💪','😊','🙌','🤗'][Math.floor(Math.random()*4)];
     document.getElementById('resultText').textContent=['Майже! Ще спробуй!','Не здавайся!','Ти зможеш!'][Math.floor(Math.random()*3)];
@@ -417,6 +482,7 @@ function nextWord(){
     document.getElementById('gameWrap').className='game-wrap hide';
     document.getElementById('finishScreen').className='finish show';
     document.getElementById('finalScore').textContent='⭐ '+score+' з '+WORDS.length;
+    playFinish();
     spawnConfetti();
     return;
   }
