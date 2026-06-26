@@ -12,6 +12,10 @@ body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; user-select: none; -webkit-user-select: none;
 }
+.version-tag {
+  position: fixed; top: 10px; right: 12px;
+  font-size: 11px; color: #ccc; font-weight: 600; letter-spacing: .05em;
+}
 .game { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
 .progress-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #E0D5C8; transition: background 0.3s; }
@@ -32,6 +36,32 @@ body {
 .hint { font-size: 15px; color: #B0A090; min-height: 44px; line-height: 1.4; }
 .thinking { font-size: 14px; color: #F5A623; min-height: 20px; text-align: center; }
 .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+/* mic status dot */
+.mic-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #B0A090;
+}
+.mic-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #ccc;
+  flex-shrink: 0; transition: background 0.3s;
+}
+.mic-status-dot.ready  { background: #4CAF50; }
+.mic-status-dot.active { background: #E53935; animation: blink .6s ease-in-out infinite; }
+.mic-status-dot.error  { background: #FF8A65; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* volume bars */
+.vol-bars {
+  display: flex; align-items: flex-end; gap: 3px; height: 24px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.vol-bars.show { opacity: 1; }
+.vol-bar {
+  width: 4px; background: #FF6B35; border-radius: 2px;
+  height: 4px; transition: height 0.08s;
+}
+
 .mic-btn {
   width: 88px; height: 88px; border-radius: 50%; border: none;
   background: #FF6B35; cursor: pointer;
@@ -43,6 +73,7 @@ body {
 .mic-btn:active { transform: scale(0.92); }
 .mic-btn.recording { background: #E53935; animation: pulse 1s ease-in-out infinite; }
 .mic-btn.loading { background: #9E9E9E; }
+.mic-btn.disabled { background: #ccc; cursor: not-allowed; }
 @keyframes pulse {
   0%,100% { box-shadow: 0 4px 20px rgba(229,57,53,0.4); }
   50% { box-shadow: 0 4px 40px rgba(229,57,53,0.7), 0 0 0 14px rgba(229,57,53,0.12); }
@@ -84,10 +115,11 @@ body {
   margin-top: 16px; padding: 16px 48px; background: #FF6B35; color: white; border: none;
   border-radius: 50px; font-size: 18px; font-weight: 600; cursor: pointer; touch-action: manipulation;
 }
-.debug { font-size: 11px; color: #ccc; text-align: center; margin-top: 8px; word-break: break-all; }
+.debug { font-size: 11px; color: #bbb; text-align: center; margin-top: 4px; word-break: break-all; min-height: 16px; }
 </style>
 </head>
 <body>
+<div class="version-tag">v5</div>
 <div class="game">
   <div class="game-wrap" id="gameWrap">
     <div class="progress-row" id="progressRow"></div>
@@ -99,6 +131,13 @@ body {
     </div>
     <div class="thinking" id="thinking"></div>
     <div class="mic-wrap">
+      <div class="vol-bars" id="volBars">
+        <div class="vol-bar" id="vb0"></div>
+        <div class="vol-bar" id="vb1"></div>
+        <div class="vol-bar" id="vb2"></div>
+        <div class="vol-bar" id="vb3"></div>
+        <div class="vol-bar" id="vb4"></div>
+      </div>
       <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -108,6 +147,10 @@ body {
         </svg>
       </button>
       <div class="mic-label" id="micLabel">натисни і говори</div>
+      <div class="mic-status">
+        <div class="mic-status-dot" id="micDot"></div>
+        <span id="micStatusText">перевірка мікрофона…</span>
+      </div>
     </div>
     <div class="debug" id="debug"></div>
   </div>
@@ -129,22 +172,81 @@ body {
 </div>
 <script>
 const WORDS = [
-  {word:'кіт',     syllables:'кіт',          hint:'🐱 Читай вголос!'},
-  {word:'сонце',   syllables:'сон · це',      hint:'☀️ Читай вголос!'},
   {word:'мама',    syllables:'ма · ма',        hint:'👩 Читай вголос!'},
+  {word:'тато',    syllables:'та · то',        hint:'👨 Читай вголос!'},
+  {word:'кіт',     syllables:'кіт',            hint:'🐱 Читай вголос!'},
+  {word:'дім',     syllables:'дім',            hint:'🏠 Читай вголос!'},
+  {word:'сонце',   syllables:'сон · це',       hint:'☀️ Читай вголос!'},
   {word:'книга',   syllables:'кни · га',       hint:'📚 Читай вголос!'},
-  {word:'дерево',  syllables:'де · ре · во',   hint:'🌳 Читай вголос!'},
-  {word:'молоко',  syllables:'мо · ло · ко',   hint:'🥛 Читай вголос!'},
+  {word:'вода',    syllables:'во · да',        hint:'💧 Читай вголос!'},
   {word:'зірка',   syllables:'зір · ка',       hint:'⭐ Читай вголос!'},
-  {word:'вода',    syllables:'во · да',         hint:'💧 Читай вголос!'},
-  {word:'яблуко',  syllables:'яб · лу · ко',   hint:'🍎 Читай вголос!'},
+  {word:'яблуко',  syllables:'яб · лу · ко',  hint:'🍎 Читай вголос!'},
   {word:'метелик', syllables:'ме · те · лик',  hint:'🦋 Читай вголос!'},
 ];
 
 let current=0, score=0, recognition=null, isRecording=false;
+let audioCtx=null, analyser=null, micStream=null, volTimer=null;
+let micReady = false;
 
-function dbg(msg) {
-  document.getElementById('debug').textContent = msg;
+function dbg(msg){ document.getElementById('debug').textContent = msg; }
+
+function setMicStatus(state, text){
+  const dot = document.getElementById('micDot');
+  const label = document.getElementById('micStatusText');
+  dot.className = 'mic-status-dot' + (state ? ' '+state : '');
+  label.textContent = text;
+}
+
+// Check mic permission on load
+async function checkMic(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    micStream = stream;
+    micReady = true;
+    setMicStatus('ready', 'мікрофон підключено ✓');
+    setupVolumeAnalyser(stream);
+  } catch(e) {
+    micReady = false;
+    setMicStatus('error', 'немає доступу до мікрофона');
+    document.getElementById('micBtn').className = 'mic-btn disabled';
+    document.getElementById('micLabel').textContent = '';
+    dbg('mic: '+e.name);
+  }
+}
+
+function setupVolumeAnalyser(stream){
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    const src = audioCtx.createMediaStreamSource(stream);
+    src.connect(analyser);
+  } catch(e){ /* skip if unsupported */ }
+}
+
+function startVolBars(){
+  if(!analyser) return;
+  const bars = [0,1,2,3,4].map(i => document.getElementById('vb'+i));
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  document.getElementById('volBars').className = 'vol-bars show';
+
+  volTimer = setInterval(()=>{
+    analyser.getByteFrequencyData(data);
+    // sample 5 frequency buckets
+    const slots = [2,5,9,14,20];
+    bars.forEach((b,i)=>{
+      const v = data[slots[i]] || 0;
+      const h = Math.max(4, Math.round((v/255)*24));
+      b.style.height = h+'px';
+    });
+  }, 80);
+}
+
+function stopVolBars(){
+  clearInterval(volTimer);
+  volTimer = null;
+  document.getElementById('volBars').className = 'vol-bars';
+  [0,1,2,3,4].forEach(i=>{ document.getElementById('vb'+i).style.height='4px'; });
 }
 
 function buildProgress(){
@@ -174,32 +276,31 @@ function showWord(){
 }
 
 function toggleRecording(){
+  if(!micReady){
+    checkMic();
+    return;
+  }
   if(isRecording){ stopRecording(); }
   else{ startRecording(); }
 }
 
 function normalize(s){
-  return s.toLowerCase().trim()
-    .replace(/[^а-яіїєґьʼ']/gi,'');
+  return s.toLowerCase().trim().replace(/[^а-яіїєґьʼ']/gi,'');
 }
 
 function wordsMatch(heard, target){
   const h = normalize(heard);
   const t = normalize(target);
   if(h === t) return true;
-  // allow if target appears anywhere in heard (child may say extra words)
   if(h.includes(t)) return true;
-  // simple edit distance ≤ 1
   if(Math.abs(h.length - t.length) <= 1){
-    let diff=0;
+    let diff=0, si=0;
     const longer = h.length>=t.length ? h : t;
     const shorter = h.length<t.length ? h : t;
-    let si=0;
     for(let li=0;li<longer.length&&si<shorter.length;li++){
       if(longer[li]!==shorter[si]){ diff++; si++; } else { si++; }
     }
-    diff += shorter.length - si;
-    if(diff <= 1) return true;
+    if(diff + (shorter.length-si) <= 1) return true;
   }
   return false;
 }
@@ -207,7 +308,7 @@ function wordsMatch(heard, target){
 function startRecording(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){
-    document.getElementById('hint').textContent='Браузер не підтримує розпізнавання голосу. Спробуй Chrome.';
+    document.getElementById('hint').textContent='Браузер не підтримує голос. Спробуй Chrome.';
     return;
   }
 
@@ -222,16 +323,19 @@ function startRecording(){
   document.getElementById('wordDisplay').className='word listening';
   document.getElementById('hint').textContent='🔴 Читай зараз!';
   document.getElementById('thinking').textContent='';
+  setMicStatus('active', 'слухаю…');
+  startVolBars();
 
   recognition.onresult = (e) => {
     isRecording = false;
+    stopVolBars();
+    setMicStatus('ready', 'мікрофон підключено ✓');
     document.getElementById('micBtn').className='mic-btn';
     document.getElementById('micLabel').textContent='натисни і говори';
     document.getElementById('thinking').textContent='';
 
     const target = WORDS[current].word;
-    let correct = false;
-    let bestHeard = '';
+    let correct = false, bestHeard = '';
 
     for(let i=0; i<e.results[0].length; i++){
       const alt = e.results[0][i].transcript;
@@ -239,27 +343,32 @@ function startRecording(){
       if(wordsMatch(alt, target)){ correct=true; bestHeard=alt; break; }
     }
 
-    dbg('почув: '+bestHeard);
+    dbg('почув: "'+bestHeard+'"');
     showResult(correct, bestHeard);
   };
 
   recognition.onerror = (e) => {
     isRecording = false;
+    stopVolBars();
     document.getElementById('micBtn').className='mic-btn';
     document.getElementById('micLabel').textContent='натисни і говори';
     document.getElementById('thinking').textContent='';
     document.getElementById('wordDisplay').className='word';
     if(e.error==='no-speech'){
+      setMicStatus('ready', 'мікрофон підключено ✓');
       document.getElementById('hint').textContent='Нічого не почув. Спробуй ще раз!';
     } else {
-      document.getElementById('hint').textContent='Помилка: '+e.error;
-      dbg('error: '+e.error);
+      setMicStatus('error', 'помилка: '+e.error);
+      document.getElementById('hint').textContent='Помилка мікрофона: '+e.error;
+      dbg('SR error: '+e.error);
     }
   };
 
   recognition.onend = () => {
     if(isRecording){
       isRecording = false;
+      stopVolBars();
+      setMicStatus('ready', 'мікрофон підключено ✓');
       document.getElementById('micBtn').className='mic-btn';
       document.getElementById('micLabel').textContent='натисни і говори';
       document.getElementById('wordDisplay').className='word';
@@ -273,6 +382,8 @@ function startRecording(){
 function stopRecording(){
   if(recognition && isRecording){
     recognition.stop();
+    stopVolBars();
+    setMicStatus('ready', 'мікрофон підключено ✓');
     document.getElementById('micBtn').className='mic-btn loading';
     document.getElementById('micLabel').textContent='';
     document.getElementById('thinking').textContent='🤔 слухаю...';
@@ -324,13 +435,14 @@ function spawnConfetti(){
 }
 
 function restartGame(){
-  current=0;score=0;
+  current=0; score=0;
   document.getElementById('gameWrap').className='game-wrap';
   document.getElementById('finishScreen').className='finish';
   showWord();
 }
 
 showWord();
+checkMic();
 </script>
 </body>
 </html>
