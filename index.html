@@ -8,15 +8,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #FFF9F0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  user-select: none;
-  -webkit-user-select: none;
+  background: #FFF9F0; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; user-select: none; -webkit-user-select: none;
 }
 .game { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
 .progress-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
@@ -26,8 +20,7 @@ body {
 .score { font-size: 15px; font-weight: 600; color: #F5A623; margin-left: 12px; }
 .card {
   background: white; border-radius: 28px; padding: 40px 32px 36px;
-  width: 100%; text-align: center;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  width: 100%; text-align: center; box-shadow: 0 4px 32px rgba(0,0,0,0.08);
   position: relative; overflow: hidden;
 }
 .card-top { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg,#FF6B35,#F5A623); }
@@ -55,11 +48,6 @@ body {
   50% { box-shadow: 0 4px 40px rgba(229,57,53,0.7), 0 0 0 14px rgba(229,57,53,0.12); }
 }
 .mic-label { font-size: 14px; color: #B0A090; text-align: center; min-height: 20px; }
-.permission-btn {
-  padding: 14px 32px; background: #FF6B35; color: white;
-  border: none; border-radius: 50px; font-size: 16px; font-weight: 600;
-  cursor: pointer; touch-action: manipulation; display: none;
-}
 .result-overlay {
   position: fixed; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -73,7 +61,8 @@ body {
   text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.12);
   width: 100%; max-width: 360px;
 }
-.result-emoji { font-size: 72px; line-height: 1; }
+.result-emoji { font-size: 72px; line-height: 1; animation: popIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes popIn { 0%{transform:scale(0)} 100%{transform:scale(1)} }
 .result-text { font-size: 26px; font-weight: 700; color: #2D2D2D; margin-top: 12px; }
 .result-heard { font-size: 14px; color: #999; margin-top: 8px; line-height: 1.4; }
 .next-btn {
@@ -92,11 +81,10 @@ body {
 .game-wrap { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }
 .game-wrap.hide { display: none; }
 .restart-btn {
-  margin-top: 16px; padding: 16px 48px;
-  background: #FF6B35; color: white; border: none;
-  border-radius: 50px; font-size: 18px; font-weight: 600;
-  cursor: pointer; touch-action: manipulation;
+  margin-top: 16px; padding: 16px 48px; background: #FF6B35; color: white; border: none;
+  border-radius: 50px; font-size: 18px; font-weight: 600; cursor: pointer; touch-action: manipulation;
 }
+.debug { font-size: 11px; color: #ccc; text-align: center; margin-top: 8px; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -112,7 +100,7 @@ body {
     <div class="thinking" id="thinking"></div>
     <div class="mic-wrap">
       <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
-        <svg id="micIcon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
           <line x1="12" y1="19" x2="12" y2="23"/>
@@ -120,12 +108,9 @@ body {
         </svg>
       </button>
       <div class="mic-label" id="micLabel">натисни і говори</div>
-      <button class="permission-btn" id="permissionBtn" onclick="requestPermission()">
-        Дозволити мікрофон 🎤
-      </button>
     </div>
+    <div class="debug" id="debug"></div>
   </div>
-
   <div class="finish" id="finishScreen">
     <div style="font-size:72px">🏆</div>
     <div style="font-size:30px;font-weight:700;color:#2D2D2D">Молодець!</div>
@@ -134,7 +119,6 @@ body {
     <button class="restart-btn" onclick="restartGame()">Ще раз! 🔄</button>
   </div>
 </div>
-
 <div class="result-overlay" id="resultOverlay">
   <div class="result-card">
     <div class="result-emoji" id="resultEmoji"></div>
@@ -143,7 +127,6 @@ body {
     <button class="next-btn" onclick="nextWord()">Далі →</button>
   </div>
 </div>
-
 <script>
 const WORDS = [
   {word:'кіт',     syllables:'кіт',          hint:'🐱 Читай вголос!'},
@@ -158,239 +141,214 @@ const WORDS = [
   {word:'метелик', syllables:'ме · те · лик',  hint:'🦋 Читай вголос!'},
 ];
 
-let current = 0, score = 0;
-let mediaRecorder = null, audioChunks = [], isRecording = false;
-let hasPermission = false;
+let current=0, score=0, mediaRecorder=null, audioChunks=[], isRecording=false;
 
-async function checkPermission() {
-  try {
-    const result = await navigator.permissions.query({name: 'microphone'});
-    if (result.state === 'granted') {
-      hasPermission = true;
-    } else if (result.state === 'denied') {
-      showPermissionBtn();
+function dbg(msg) {
+  document.getElementById('debug').textContent = msg;
+}
+
+function buildProgress(){
+  const row=document.getElementById('progressRow');
+  row.innerHTML='';
+  WORDS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i<current?' done':i===current?' current':'');
+    row.appendChild(d);
+  });
+  const sc=document.createElement('div');
+  sc.className='score';
+  sc.textContent='⭐ '+score;
+  row.appendChild(sc);
+}
+
+function showWord(){
+  const w=WORDS[current];
+  document.getElementById('syllables').textContent=w.syllables;
+  document.getElementById('wordDisplay').textContent=w.word;
+  document.getElementById('wordDisplay').className='word';
+  document.getElementById('hint').textContent=w.hint;
+  document.getElementById('thinking').textContent='';
+  document.getElementById('micBtn').className='mic-btn';
+  document.getElementById('micLabel').textContent='натисни і говори';
+  buildProgress();
+}
+
+async function toggleRecording(){
+  if(isRecording){stopRecording();}
+  else{await startRecording();}
+}
+
+async function startRecording(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    audioChunks=[];
+
+    // iOS Safari / Chrome on iOS supports audio/mp4
+    let mimeType = '';
+    const types = ['audio/mp4','audio/aac','audio/webm;codecs=opus','audio/webm','audio/ogg'];
+    for(const t of types){
+      if(MediaRecorder.isTypeSupported(t)){ mimeType=t; break; }
     }
-  } catch(e) {
-    // permissions API not supported, will check on first use
+    dbg('format: '+mimeType);
+
+    const options = mimeType ? {mimeType} : {};
+    mediaRecorder=new MediaRecorder(stream, options);
+    mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      processAudio(mediaRecorder.mimeType||mimeType||'audio/mp4');
+    };
+    mediaRecorder.start(250);
+    isRecording=true;
+
+    document.getElementById('micBtn').className='mic-btn recording';
+    document.getElementById('micLabel').textContent='зупинити →';
+    document.getElementById('wordDisplay').className='word listening';
+    document.getElementById('hint').textContent='🔴 Читай зараз!';
+
+    setTimeout(()=>{if(isRecording)stopRecording();},5000);
+  }catch(e){
+    dbg('mic error: '+e.name+' '+e.message);
+    document.getElementById('hint').textContent='Помилка мікрофона: '+e.message;
   }
 }
 
-function showPermissionBtn() {
-  document.getElementById('micBtn').style.display = 'none';
-  document.getElementById('permissionBtn').style.display = 'block';
-  document.getElementById('micLabel').textContent = 'Потрібен доступ до мікрофона';
+function stopRecording(){
+  if(!mediaRecorder||!isRecording)return;
+  isRecording=false;
+  mediaRecorder.stop();
+  document.getElementById('micBtn').className='mic-btn loading';
+  document.getElementById('micLabel').textContent='';
+  document.getElementById('thinking').textContent='🤔 аналізую...';
 }
 
-async function requestPermission() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    stream.getTracks().forEach(t => t.stop());
-    hasPermission = true;
-    document.getElementById('micBtn').style.display = 'flex';
-    document.getElementById('permissionBtn').style.display = 'none';
-    document.getElementById('micLabel').textContent = 'натисни і говори';
-    document.getElementById('hint').textContent = WORDS[current].hint;
-  } catch(e) {
-    document.getElementById('micLabel').textContent = 'Дозволи мікрофон у налаштуваннях';
-    document.getElementById('hint').textContent = 'Налаштування → Safari → Мікрофон → Дозволити';
-  }
-}
-
-async function toggleRecording() {
-  if (isRecording) {
-    stopRecording();
+async function processAudio(mimeType){
+  if(audioChunks.length===0){
+    dbg('no audio chunks');
+    document.getElementById('thinking').textContent='';
+    document.getElementById('hint').textContent='Нічого не записалось. Спробуй ще раз.';
+    document.getElementById('micBtn').className='mic-btn';
+    document.getElementById('micLabel').textContent='натисни і говори';
     return;
   }
-  await startRecording();
-}
 
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    hasPermission = true;
-    audioChunks = [];
+  const blob=new Blob(audioChunks,{type: mimeType});
+  dbg('blob: '+blob.size+' bytes, type: '+blob.type);
 
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : MediaRecorder.isTypeSupported('audio/mp4')
-      ? 'audio/mp4'
-      : 'audio/webm';
-
-    mediaRecorder = new MediaRecorder(stream, {mimeType});
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
-      stream.getTracks().forEach(t => t.stop());
-      processAudio();
-    };
-
-    mediaRecorder.start(100);
-    isRecording = true;
-
-    const btn = document.getElementById('micBtn');
-    btn.className = 'mic-btn recording';
-    document.getElementById('micLabel').textContent = 'зупинити →';
-    document.getElementById('wordDisplay').className = 'word listening';
-    document.getElementById('hint').textContent = '🔴 Читай зараз!';
-
-    setTimeout(() => { if (isRecording) stopRecording(); }, 5000);
-
-  } catch(e) {
-    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-      showPermissionBtn();
-    } else {
-      document.getElementById('hint').textContent = 'Помилка мікрофона. Спробуй ще раз.';
-    }
-  }
-}
-
-function stopRecording() {
-  if (!mediaRecorder || !isRecording) return;
-  isRecording = false;
-  mediaRecorder.stop();
-  const btn = document.getElementById('micBtn');
-  btn.className = 'mic-btn loading';
-  document.getElementById('micLabel').textContent = '';
-  document.getElementById('thinking').textContent = '🤔 аналізую...';
-}
-
-async function processAudio() {
-  const blob = new Blob(audioChunks, {type: mediaRecorder.mimeType});
-  const base64 = await new Promise(res => {
-    const r = new FileReader();
-    r.onloadend = () => res(r.result.split(',')[1]);
+  const base64=await new Promise(res=>{
+    const r=new FileReader();
+    r.onloadend=()=>res(r.result.split(',')[1]);
     r.readAsDataURL(blob);
   });
 
-  const targetWord = WORDS[current].word;
-  const mediaType = mediaRecorder.mimeType.split(';')[0];
+  const targetWord=WORDS[current].word;
+  // Use only the base mime type without codecs
+  const cleanMime = (blob.type||mimeType).split(';')[0] || 'audio/mp4';
 
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 150,
-        messages: [{
-          role: 'user',
-          content: [
+  try{
+    dbg('sending to API... mime='+cleanMime);
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:150,
+        messages:[{
+          role:'user',
+          content:[
             {
-              type: 'image',
-              source: {type: 'base64', media_type: mediaType, data: base64}
+              type:'document',
+              source:{type:'base64', media_type: cleanMime, data:base64}
             },
             {
-              type: 'text',
-              text: `Це аудіозапис дитини 10 років з дислексією яка читає українське слово вголос. Слово яке вона мала прочитати: "${targetWord}". Будь ласка транскрибуй що вона сказала і визнач чи правильно вона прочитала це слово. Будь щедрим у оцінці — якщо слово схоже за звучанням вважай правильним. Відповідай ТІЛЬКИ у форматі JSON без пояснень: {"heard":"що почув","correct":true або false}`
+              type:'text',
+              text:`Це аудіозапис дитини 10 років з дислексією яка читає українське слово вголос. Слово яке вона мала прочитати: "${targetWord}". Транскрибуй що вона сказала і визнач чи правильно прочитала. Якщо схоже за звучанням — вважай правильним. Відповідай ТІЛЬКИ JSON: {"heard":"що почув","correct":true або false}`
             }
           ]
         }]
       })
     });
 
-    const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const data=await response.json();
+    dbg('api resp: '+JSON.stringify(data).slice(0,100));
+    const text=data.content?.[0]?.text||'';
 
-    let heard = '', correct = false;
-    try {
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
-      heard = parsed.heard || '';
-      correct = parsed.correct === true;
-    } catch(e) {
-      correct = text.toLowerCase().includes(targetWord.toLowerCase());
+    let heard='',correct=false;
+    try{
+      const clean=text.replace(/```json|```/g,'').trim();
+      const parsed=JSON.parse(clean);
+      heard=parsed.heard||'';
+      correct=parsed.correct===true;
+    }catch(e){
+      correct=text.toLowerCase().includes(targetWord.toLowerCase());
+      heard=text.slice(0,50);
     }
 
-    document.getElementById('thinking').textContent = '';
-    document.getElementById('micBtn').className = 'mic-btn';
-    document.getElementById('micLabel').textContent = 'натисни і говори';
-    showResult(correct, heard);
+    document.getElementById('thinking').textContent='';
+    document.getElementById('micBtn').className='mic-btn';
+    document.getElementById('micLabel').textContent='натисни і говори';
+    showResult(correct,heard);
 
-  } catch(e) {
-    document.getElementById('thinking').textContent = '';
-    document.getElementById('micBtn').className = 'mic-btn';
-    document.getElementById('micLabel').textContent = 'натисни і говори';
-    document.getElementById('hint').textContent = 'Щось пішло не так. Спробуй ще раз.';
+  }catch(e){
+    dbg('fetch error: '+e.message);
+    document.getElementById('thinking').textContent='';
+    document.getElementById('micBtn').className='mic-btn';
+    document.getElementById('micLabel').textContent='натисни і говори';
+    document.getElementById('hint').textContent='Помилка з\'єднання. Спробуй ще раз.';
   }
 }
 
-function showResult(success, heard) {
-  const overlay = document.getElementById('resultOverlay');
-  if (success) {
+function showResult(success,heard){
+  const overlay=document.getElementById('resultOverlay');
+  if(success){
     score++;
-    overlay.className = 'result-overlay success-bg show';
-    document.getElementById('resultEmoji').textContent = ['🎉','⭐','🌟','🏆','👏','🥳'][Math.floor(Math.random()*6)];
-    document.getElementById('resultText').textContent = ['Супер!','Чудово!','Молодець!','Відмінно!','Браво!','Так тримати!'][Math.floor(Math.random()*6)];
-    document.getElementById('resultHeard').textContent = '';
-    document.getElementById('wordDisplay').className = 'word success';
+    overlay.className='result-overlay success-bg show';
+    document.getElementById('resultEmoji').textContent=['🎉','⭐','🌟','🏆','👏','🥳'][Math.floor(Math.random()*6)];
+    document.getElementById('resultText').textContent=['Супер!','Чудово!','Молодець!','Відмінно!','Браво!'][Math.floor(Math.random()*5)];
+    document.getElementById('resultHeard').textContent='';
+    document.getElementById('wordDisplay').className='word success';
     spawnConfetti();
-  } else {
-    overlay.className = 'result-overlay fail-bg show';
-    document.getElementById('resultEmoji').textContent = ['💪','😊','🙌','🤗'][Math.floor(Math.random()*4)];
-    document.getElementById('resultText').textContent = ['Майже! Ще спробуй!','Не здавайся!','Ти зможеш!','Ще раз!'][Math.floor(Math.random()*4)];
-    document.getElementById('resultHeard').textContent = heard ? 'Я почув: "' + heard + '"' : '';
-    document.getElementById('wordDisplay').className = 'word fail';
+  }else{
+    overlay.className='result-overlay fail-bg show';
+    document.getElementById('resultEmoji').textContent=['💪','😊','🙌','🤗'][Math.floor(Math.random()*4)];
+    document.getElementById('resultText').textContent=['Майже! Ще спробуй!','Не здавайся!','Ти зможеш!'][Math.floor(Math.random()*3)];
+    document.getElementById('resultHeard').textContent=heard?'Я почув: "'+heard+'"':'';
+    document.getElementById('wordDisplay').className='word fail';
   }
   buildProgress();
 }
 
-function nextWord() {
-  document.getElementById('resultOverlay').className = 'result-overlay';
+function nextWord(){
+  document.getElementById('resultOverlay').className='result-overlay';
   current++;
-  if (current >= WORDS.length) {
-    document.getElementById('gameWrap').className = 'game-wrap hide';
-    document.getElementById('finishScreen').className = 'finish show';
-    document.getElementById('finalScore').textContent = '⭐ ' + score + ' з ' + WORDS.length;
+  if(current>=WORDS.length){
+    document.getElementById('gameWrap').className='game-wrap hide';
+    document.getElementById('finishScreen').className='finish show';
+    document.getElementById('finalScore').textContent='⭐ '+score+' з '+WORDS.length;
     spawnConfetti();
     return;
   }
   showWord();
 }
 
-function buildProgress() {
-  const row = document.getElementById('progressRow');
-  row.innerHTML = '';
-  WORDS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i < current ? ' done' : i === current ? ' current' : '');
-    row.appendChild(d);
-  });
-  const sc = document.createElement('div');
-  sc.className = 'score';
-  sc.textContent = '⭐ ' + score;
-  row.appendChild(sc);
-}
-
-function showWord() {
-  const w = WORDS[current];
-  document.getElementById('syllables').textContent = w.syllables;
-  document.getElementById('wordDisplay').textContent = w.word;
-  document.getElementById('wordDisplay').className = 'word';
-  document.getElementById('hint').textContent = w.hint;
-  document.getElementById('thinking').textContent = '';
-  document.getElementById('micBtn').className = 'mic-btn';
-  document.getElementById('micLabel').textContent = 'натисни і говори';
-  buildProgress();
-}
-
-function spawnConfetti() {
-  const colors = ['#FF6B35','#F5A623','#4CAF50','#2196F3','#E91E63','#9C27B0'];
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'confetti-piece';
-    p.style.cssText = `left:${Math.random()*100}%;top:-10px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.7}s;animation-duration:${1.2+Math.random()*0.8}s`;
+function spawnConfetti(){
+  const colors=['#FF6B35','#F5A623','#4CAF50','#2196F3','#E91E63'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;top:-10px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.7}s;animation-duration:${1.2+Math.random()*0.8}s`;
     document.body.appendChild(p);
-    setTimeout(() => p.remove(), 2500);
+    setTimeout(()=>p.remove(),2500);
   }
 }
 
-function restartGame() {
-  current = 0; score = 0;
-  document.getElementById('gameWrap').className = 'game-wrap';
-  document.getElementById('finishScreen').className = 'finish';
+function restartGame(){
+  current=0;score=0;
+  document.getElementById('gameWrap').className='game-wrap';
+  document.getElementById('finishScreen').className='finish';
   showWord();
 }
 
-checkPermission();
 showWord();
 </script>
 </body>
